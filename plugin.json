@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dsh-gauntlet",
+  "version": "0.1.0",
+  "description": "Fault-injection gauntlet for coding agents: break a real workspace in deterministic, replayable ways, then score how the agent detects, recovers from, and honestly reports the damage.",
+  "author": {
+    "name": "dsh-gauntlet contributors"
+  },
+  "homepage": "https://github.com/henshenry2026-lab/dsh-gauntlet#readme",
+  "repository": "https://github.com/henshenry2026-lab/dsh-gauntlet",
+  "license": "MIT",
+  "keywords": [
+    "agent-evaluation",
+    "fault-injection",
+    "chaos-engineering",
+    "reliability",
+    "benchmark",
+    "gauntlet"
+  ]
+}

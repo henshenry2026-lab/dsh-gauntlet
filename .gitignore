@@ -1,0 +1,43 @@
+# Dependency directories: the package has none, but a consumer's tooling may
+# create these, and a stray node_modules in a published tarball is a supply-chain
+# accident waiting to happen.
+node_modules/
+jq_modules/
+.pnp.*
+.pnp.js
+
+# Run scratch space. Every gauntlet run belongs under the OS temp directory, but
+# a developer who passes --keep or a custom root will leave one here.
+/tmp/
+.gauntlet/
+*.gauntlet-run/
+
+# Editor and OS noise.
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test and coverage output.
+coverage/
+.nyc_output/
+*.lcov
+*.tap
+test-results/
+
+# Logs and local environment.
+*.log
+npm-debug.log*
+.env
+.env.*
+
+# Build artifacts of tools that might be pointed at this directory.
+dist/
+build/
+*.tsbuildinfo
+
+# npm pack output.
+*.tgz

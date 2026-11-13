@@ -1,0 +1,25 @@
+# dsh-gauntlet — bundle patch layer
+#
+# This package is a single-row bundle. It ships one host module and mounts it
+# once; there is no service to compose and no second row to keep in sync.
+#
+# Install into a profile with:
+#
+#   dsh plugin --profile <name> add dsh-gauntlet
+#
+# then restart the profile. The web profile has HMR disabled, so a plugin added
+# at run time appears on the next boot.
+#
+# BOOT SAFETY
+#
+# The row ships enabled because it has nothing to download and nothing to
+# resolve at boot: `apply()` only registers tools on a service every profile
+# already provides. A plugin that could hang startup — anything that spawns a
+# network install before its first tool call — must not ship enabled, and this
+# one does not need to.
+#
+# Tuning: the plugin reads no config. Every knob a run needs is a tool argument
+# (`scenario`, `seed`), so an operator changes a run, not the profile.
+- insert:
+    - id: dsh-gauntlet
+      name: dsh-gauntlet

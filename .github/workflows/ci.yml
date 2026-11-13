@@ -1,0 +1,112 @@
+name: CI
+
+# The gauntlet's whole claim is that it reproduces. A CI run that is green here
+# and red on a contributor's machine would undercut that, so the pipeline runs
+# the two things the local scripts do — one fork-free, one forked — and asserts
+# the published manifests still agree with the tree.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node 22 is the floor declared in engines; 24 is what ships today. Both
+        # matter: the engine uses `node:test`, `crypto` and ESM everywhere.
+        node: [22, 24]
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Report the toolchain
+        run: node --version && npm --version
+
+      # No `npm install`: the package has zero dependencies, and proving that is
+      # part of the test. A PR that adds one fails here, loudly.
+      - name: Confirm there are no dependencies
+        shell: bash
+        run: |
+          node -e '
+            const pkg = require("./package.json");
+            const groups = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+            const found = groups.flatMap((group) => Object.keys(pkg[group] ?? {}));
+            if (found.length > 0) {
+              console.error(`unexpected dependencies: ${found.join(", ")}`);
+              process.exit(1);
+            }
+            console.log("zero dependencies, as designed");
+          '
+
+      - name: Syntax-check every entry point
+        run: npm run check
+
+      - name: Run the test suite (forked, the idiomatic path)
+        if: runner.os != 'Windows'
+        run: npm run test:ci
+
+      - name: Run the test suite (in-process)
+        if: runner.os == 'Windows'
+        run: npm test
+
+      - name: Run the scenario smoke test
+        run: npm run smoke
+
+      - name: Speak MCP to a real child process
+        run: npm run smoke:mcp
+
+      - name: Verify the published tarball
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json > pack.json
+          node -e '
+            const [report] = require("./pack.json");
+            const files = new Set(report.files.map((entry) => entry.path));
+            const required = [
+              "package.json",
+              "cordis.patch.yml",
+              "plugin.json",
+              "mcp.json",
+              "LICENSE",
+              "README.md",
+              "README.zh.md",
+              "CHANGELOG.md",
+              "src/dsh/index.mjs",
+              "src/mcp/server.mjs",
+              "skills/gauntlet/SKILL.md",
+            ];
+            const missing = required.filter((path) => !files.has(path));
+            if (missing.length > 0) {
+              console.error(`the tarball is missing: ${missing.join(", ")}`);
+              process.exit(1);
+            }
+            // A test file or the fixtures leaking into the package is not fatal,
+            // but it is a smell: the fixtures are deliberately shipped, tests are not.
+            const leaked = [...files].filter((path) => path.startsWith("test/") || path.startsWith("scripts/"));
+            if (leaked.length > 0) {
+              console.error(`development files would be published: ${leaked.join(", ")}`);
+              process.exit(1);
+            }
+            console.log(`tarball: ${files.size} files, ${required.length} required entries present`);
+          '

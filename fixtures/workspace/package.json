@@ -1,0 +1,11 @@
+{
+  "name": "gauntlet-workspace",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "description": "A small money and ledger library used as the gauntlet fixture.",
+  "scripts": {
+    "test": "node --test test/",
+    "tiers": "node tools/gen-tiers.mjs"
+  }
+}
