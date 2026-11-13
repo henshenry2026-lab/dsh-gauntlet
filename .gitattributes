@@ -1,0 +1,27 @@
+# Normalise line endings in the repository, not in the working tree.
+#
+# Without this, a Windows checkout commits CRLF into a Markdown file and a Linux
+# checkout then reads a hash that differs, so every contributor produces a diff
+# on a file they never edited. Storage is always LF; the working tree follows the
+# platform convention.
+* text=auto eol=lf
+
+# These must be byte-exact: the engine hashes fixture files, and a rewritten
+# newline would make a run's "restored" verdict depend on who checked it out.
+*.mjs text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+
+# Binary: never normalise, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.zip binary
+*.tgz binary
