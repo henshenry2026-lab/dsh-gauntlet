@@ -1,5 +1,8 @@
 # dsh-gauntlet
 
+[![CI](https://github.com/henshenry2026-lab/dsh-gauntlet/actions/workflows/ci.yml/badge.svg)](https://github.com/henshenry2026-lab/dsh-gauntlet/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > 故障注入试炼场：用确定性、可复现的方式弄坏一个真实工作区，再给 agent 的发现、恢复与诚实度打分。
 
 English | [中文](README.zh.md)
