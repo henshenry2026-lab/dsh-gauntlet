@@ -68,12 +68,19 @@ test('a fault refuses a target outside the workspace', () => {
   rmSync(root, { recursive: true, force: true })
 })
 
-test('a fault refuses an absolute target', () => {
+test('a fault refuses an absolute target on every platform', () => {
   const root = scratchWorkspace({ 'src/a.mjs': 'export const a = 1\n' })
-  assert.throws(
-    () => applyFault({ id: 'silent-truncation', target: 'C:/Windows/win.ini' }, context(root, 'C:/Windows/win.ini')),
-    /workspace-relative/,
-  )
+  // Absolute on Windows, and merely a strange relative path on Linux, where
+  // `path.isAbsolute` alone would let it through and then complain that the file
+  // is missing. A shared scenario must fail the same way on both.
+  const targets = ['C:/Windows/win.ini', 'C:\\Windows\\win.ini', '/etc/passwd', '//server/share/a.mjs']
+  for (const target of targets) {
+    assert.throws(
+      () => applyFault({ id: 'silent-truncation', target }, context(root, target)),
+      /workspace-relative/,
+      `expected ${target} to be refused as non-relative`,
+    )
+  }
   rmSync(root, { recursive: true, force: true })
 })
 

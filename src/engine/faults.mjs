@@ -41,12 +41,33 @@ import { readText, writeText, exists, sha256 } from './workspace.mjs';
  * @property {string} [note] - One line for the post-run reveal.
  */
 
+/**
+ * Is this target absolute on any platform?
+ *
+ * `path.isAbsolute` answers for the running platform only, which makes a shared
+ * scenario file behave differently on Windows and on Linux: `C:/Windows/win.ini`
+ * is absolute on one and a harmless relative path on the other. A scenario is
+ * data that people copy between machines, so the answer must not depend on where
+ * it is read. A drive-letter or UNC prefix is refused everywhere, and the error
+ * says "not workspace-relative" rather than "does not exist" — the second message
+ * would invite someone to add the file to the workspace instead of fixing the
+ * scenario.
+ *
+ * @param {string} target
+ * @returns {boolean}
+ */
+function isAbsoluteAnywhere(target) {
+  if (isAbsolute(target)) return true;
+  if (target.startsWith('\\\\') || target.startsWith('//')) return true;
+  return /^[A-Za-z]:[\\/]/.test(target);
+}
+
 /** Resolve a scenario target inside the workspace and refuse to escape it. */
 function resolveTarget(workspaceDir, target) {
   if (typeof target !== 'string' || target === '') {
     throw new Error('a fault needs a non-empty target path');
   }
-  if (isAbsolute(target)) throw new Error(`target must be workspace-relative: ${target}`);
+  if (isAbsoluteAnywhere(target)) throw new Error(`target must be workspace-relative: ${target}`);
   const full = normalize(join(workspaceDir, target));
   const root = normalize(workspaceDir);
   if (full !== root && !full.startsWith(root + sep)) {
